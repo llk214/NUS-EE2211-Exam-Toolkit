@@ -2,12 +2,21 @@
 import numpy as np
 from itertools import combinations_with_replacement
 import math
+import re
 
-print("""
-╔══════════════════════════════════════════════════════════════════════════╗
-║                     EE2211 EXAM TOOLKIT (All-in-One)                     ║
-║  Logistic | Clustering | Regression | Neural Net | Trees | Optimizer     ║
-╚══════════════════════════════════════════════════════════════════════════╝
+try:
+    print("""
+\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557
+\u2551                     EE2211 EXAM TOOLKIT (All-in-One)                     \u2551
+\u2551  Logistic | Clustering | Regression | Neural Net | Trees | Optimizer     \u2551
+\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255d
+""")
+except UnicodeEncodeError:
+    print("""
++--------------------------------------------------------------------------+
+|                     EE2211 EXAM TOOLKIT (All-in-One)                     |
+|  Logistic | Clustering | Regression | Neural Net | Trees | Optimizer     |
++--------------------------------------------------------------------------+
 """)
 
 
@@ -16,9 +25,8 @@ print("""
 # ============================================================================
 
 def run_classification():
-    import sys
     print("\n" + "=" * 70)
-    print(" CLASSIFICATION (Logistic Regression — configurable) ".center(70))
+    print(" CLASSIFICATION (Logistic Regression - configurable) ".center(70))
     print("=" * 70)
 
     def parse_matrix(rows_str: str):
@@ -330,7 +338,7 @@ def run_clustering():
             print(f"Distortion J={J:.8f}")
 
             if last_J is not None and abs(last_J - J) < 1e-6:
-                print("Converged: ΔJ < 1e-6")
+                print("Converged: dJ < 1e-6")
                 C = C_new
                 break
             C, last_J = C_new, J
@@ -789,7 +797,7 @@ def run_neural():
     print("Enter Y rows (targets), same #rows as X:")
     Y = parse_matrix(input("Y = ").strip())
 
-    L = int(input("\nNumber of layers (1–5) [default 2]: ").strip() or "2")
+    L = int(input("\nNumber of layers (1-5) [default 2]: ").strip() or "2")
     activations = []
     weights = []
 
@@ -943,8 +951,8 @@ def run_regression():
         print(f"MSE:         {mse:.8f}")
         print(f"RMSE:        {rmse:.8f}")
         print(f"MAE:         {mae:.8f}")
-        print(f"R²:          {r2:.8f}")
-        print("Adjusted R²:  " + (f"{adj_r2:.8f}" if not np.isnan(adj_r2) else "N/A"))
+        print(f"R2:          {r2:.8f}")
+        print("Adjusted R2:  " + (f"{adj_r2:.8f}" if not np.isnan(adj_r2) else "N/A"))
         print(f"Pearson r:   {r:.8f}")
 
     def _print_model(tag, W, b):
@@ -1093,7 +1101,7 @@ def run_tree_forest():
 
     # ========== REGRESSION TREE FUNCTIONS ==========
     def mse_impurity(y):
-        """MSE impurity for regression: Var(y) = mean((y - ȳ)²)"""
+        """MSE impurity for regression: Var(y) = mean((y - y_mean)^2)"""
         if len(y) == 0:
             return 0.0
         return np.var(y)
@@ -1318,9 +1326,6 @@ def run_tree_forest():
         # sanitize: keep only valid feature indices
         thr_map = {k: v for k, v in thr_map.items() if 0 <= k < n_features and len(v) > 0}
         return thr_map if thr_map else None
-
-    import numpy as np
-    import re
 
     X = parse_matrix(input("X = ").strip())
     y = parse_labels(input("y (space separated) = ").strip())
@@ -1637,4 +1642,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (EOFError, KeyboardInterrupt):
+        print("\nExiting. Good luck!")
