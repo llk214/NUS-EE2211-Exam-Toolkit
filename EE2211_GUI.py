@@ -21,6 +21,15 @@ import math
 import re
 import io
 
+try:
+    import matplotlib
+    matplotlib.use('Agg')
+    from matplotlib.figure import Figure
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
+
 
 # ============================================================================
 # UTILITY: Parse helpers
@@ -719,6 +728,25 @@ class PolynomialFeatures:
         return np.hstack(out_cols) if out_cols else np.empty((n, 0))
 
 
+def _poly_term_labels(combos):
+    """Convert combo tuples to human-readable polynomial term labels.
+    e.g. (0,) -> 'x1', (0,0) -> 'x1^2', (0,1) -> 'x1*x2'
+    """
+    from collections import Counter
+    labels = []
+    for combo in combos:
+        counts = Counter(combo)
+        parts = []
+        for idx in sorted(counts):
+            power = counts[idx]
+            name = f"x{idx + 1}"
+            if power > 1:
+                name += f"^{power}"
+            parts.append(name)
+        labels.append("*".join(parts))
+    return labels
+
+
 def compute_regression(X_str, Y_str, model, alpha, degree, penalize_bias):
     out = io.StringIO()
     result = {'text': '', 'weights': None, 'bias': None, 'iterations': [],
@@ -774,10 +802,19 @@ def compute_regression(X_str, Y_str, model, alpha, degree, penalize_bias):
         W, b = Theta[:-1, :], Theta[-1, :]
         Yp = Xa @ Theta
         mets = _metrics(Y, Yp, p=p)
+        poly_labels = _poly_term_labels(poly.combos)
         out.write(f"=== Polynomial (degree={degree}, alpha={alpha}) ===\n")
 
     out.write(f"Model: Y = XW + b\n")
-    out.write(f"W (coeffs) =\n{np.round(W, 8)}\n")
+    if model == 'polynomial':
+        out.write("W (coeffs):\n")
+        w_rounded = np.round(W, 8)
+        max_label_len = max(len(l) for l in poly_labels)
+        for i, label in enumerate(poly_labels):
+            out.write(f"  {label:<{max_label_len}} : {w_rounded[i].tolist()}\n")
+        result['poly_labels'] = poly_labels
+    else:
+        out.write(f"W (coeffs) =\n{np.round(W, 8)}\n")
     out.write(f"b (intercept) = {np.round(b, 8)}\n\n")
 
     mse, rmse, mae, r2, adj_r2, r = mets
@@ -1613,6 +1650,39 @@ class MatrixGrid(tk.Frame):
 # WIDGET: ExpressionEditor - Text input with embedded variable chips
 # ============================================================================
 
+# ============================================================================
+# UTILITY: Expression-to-LaTeX conversion for math preview (using sympy)
+# ============================================================================
+
+try:
+    from sympy import symbols as _sp_symbols, latex as _sp_latex
+    from sympy.parsing.sympy_parser import (
+        parse_expr as _sp_parse,
+        standard_transformations,
+        implicit_multiplication_application,
+        convert_xor,
+    )
+    _SP_TRANSFORMS = standard_transformations + (implicit_multiplication_application, convert_xor)
+    _SP_VARS = {}
+    for _n in ('x1', 'x2', 'x3', 'x4', 'x5'):
+        _SP_VARS[_n] = _sp_symbols(_n)
+    HAS_SYMPY = True
+except ImportError:
+    HAS_SYMPY = False
+
+
+def expr_to_latex(expr):
+    """Convert a raw expression string (with ** for powers) to LaTeX using sympy."""
+    s = expr.strip()
+    if not s or not HAS_SYMPY:
+        return s
+    try:
+        parsed = _sp_parse(s, local_dict=_SP_VARS, transformations=_SP_TRANSFORMS)
+        return _sp_latex(parsed)
+    except Exception:
+        return s
+
+
 _SUBSCRIPTS = str.maketrans('12345', '\u2081\u2082\u2083\u2084\u2085')
 
 
@@ -1666,20 +1736,49 @@ class ExpressionEditor(tk.Frame):
     # -- expression extraction --
 
     def get_expression(self):
-        """Return the expression string with chip positions replaced by var names."""
+        """Return the expression string with chip positions replaced by var names.
+        Inserts '*' for implicit multiplication (e.g. x1 x2, 6sin(), 5x1)."""
         parts = []
+        prev_was_chip = False
         try:
             for key, val, idx in self._text.dump("1.0", "end-1c",
                                                   text=True, window=True):
                 if key == 'text':
+                    # Insert * between chip and text that starts with digit/letter/(
+                    if prev_was_chip and val and val[0] in '0123456789.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ(':
+                        parts.append('*')
                     parts.append(val)
+                    prev_was_chip = False
                 elif key == 'window':
                     name = self._chip_map.get(val)
                     if name:
+                        # Insert * if previous part ends with digit/letter/)
+                        if prev_was_chip:
+                            parts.append('*')
+                        elif parts:
+                            prev_text = parts[-1]
+                            if prev_text and prev_text[-1] in '0123456789.)abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ':
+                                parts.append('*')
                         parts.append(name)
+                        prev_was_chip = True
         except tk.TclError:
             pass
-        return ''.join(parts).replace('^', '**')
+        raw = ''.join(parts).replace('^', '**')
+        # Insert * between: digit and letter/( , ) and letter/digit/(
+        raw = re.sub(r'(\d)([a-zA-Z(])', r'\1*\2', raw)
+        raw = re.sub(r'(\))([a-zA-Z0-9(])', r'\1*\2', raw)
+        return raw
+
+    def get_raw_text(self):
+        """Return only the typed text (excluding chip widgets)."""
+        parts = []
+        try:
+            for key, val, idx in self._text.dump("1.0", "end-1c", text=True):
+                if key == 'text':
+                    parts.append(val)
+        except tk.TclError:
+            pass
+        return ''.join(parts)
 
     def get(self, *args):
         """Compat shim: return full expression (^ converted to **)."""
@@ -1706,6 +1805,65 @@ class ExpressionEditor(tk.Frame):
     def _fire_change(self):
         if self._on_change_cb:
             self._on_change_cb()
+
+
+# ============================================================================
+# WIDGET: MathPreview - Live rendered math preview using matplotlib mathtext
+# ============================================================================
+
+class MathPreview(tk.Frame):
+    """Displays a live-rendered LaTeX preview of the cost function expression."""
+
+    def __init__(self, parent, **kwargs):
+        super().__init__(parent, bg=MAIN_BG)
+        self._debounce_id = None
+
+        self._fig = Figure(figsize=(6, 0.5), dpi=100)
+        self._fig.patch.set_facecolor(MAIN_BG)
+        self._ax = self._fig.add_axes([0, 0, 1, 1])
+        self._ax.set_axis_off()
+
+        self._canvas = FigureCanvasTkAgg(self._fig, master=self)
+        self._canvas.get_tk_widget().pack(fill=tk.X)
+
+        self._text_obj = None
+
+    def update_expression(self, raw_expr):
+        """Schedule a debounced preview update."""
+        if self._debounce_id is not None:
+            self.after_cancel(self._debounce_id)
+        self._debounce_id = self.after(150, lambda: self._render(raw_expr))
+
+    def _render(self, raw_expr):
+        """Render the expression onto the matplotlib figure."""
+        self._debounce_id = None
+        self._ax.clear()
+        self._ax.set_axis_off()
+
+        expr = raw_expr.strip()
+        if not expr:
+            self._canvas.draw_idle()
+            return
+
+        latex = expr_to_latex(expr)
+        display = r'$C = ' + latex + r'$'
+
+        try:
+            self._ax.text(0.02, 0.5, display, fontsize=14,
+                          verticalalignment='center',
+                          transform=self._ax.transAxes,
+                          color='#89b4fa', usetex=False)
+            self._canvas.draw()
+        except Exception:
+            # Fallback: show raw expression with ^ instead of **
+            self._ax.clear()
+            self._ax.set_axis_off()
+            fallback = 'C = ' + expr.replace('**', '^')
+            self._ax.text(0.02, 0.5, fallback, fontsize=12,
+                          verticalalignment='center',
+                          transform=self._ax.transAxes,
+                          color='#888888', usetex=False)
+            self._canvas.draw_idle()
 
 
 # ============================================================================
@@ -2190,7 +2348,16 @@ class ModuleFrame(tk.Frame):
                 text_w.insert(tk.END, f"W^{i} (shape {w.shape}):\n{np.round(w, 8)}\n\n")
         else:
             w_arr = np.atleast_2d(weights)
-            text_w.insert(tk.END, f"W (shape {w_arr.shape}):\n{np.round(w_arr, 8)}\n\n")
+            poly_labels = result.get('poly_labels')
+            if poly_labels and len(poly_labels) == w_arr.shape[0]:
+                text_w.insert(tk.END, f"W (shape {w_arr.shape}):\n")
+                w_rounded = np.round(w_arr, 8)
+                max_label_len = max(len(l) for l in poly_labels)
+                for i, label in enumerate(poly_labels):
+                    text_w.insert(tk.END, f"  {label:<{max_label_len}} : {w_rounded[i].tolist()}\n")
+                text_w.insert(tk.END, "\n")
+            else:
+                text_w.insert(tk.END, f"W (shape {w_arr.shape}):\n{np.round(w_arr, 8)}\n\n")
 
         if bias is not None:
             b_arr = np.atleast_1d(bias)
@@ -3280,9 +3447,16 @@ class CostMinimizerFrame(ModuleFrame):
         self.expr_editor.pack(fill=tk.X)
         self.expr_editor.set_on_change(self._on_expr_change)
 
-        ttk.Label(expr_fr,
-                  text="e.g. sin(x\u2081)^2 + x\u2082^2  |  Use ^ for power. Insert variables with the blue buttons.",
-                  foreground="#888", font=(FONT_FAMILY, 8)).pack(anchor="w")
+        self._var_hint_label = ttk.Label(expr_fr,
+                  text="",
+                  foreground="#e06c75", font=(FONT_FAMILY, 8))
+
+        # Live math preview (rendered LaTeX)
+        if HAS_MATPLOTLIB and HAS_SYMPY:
+            self.math_preview = MathPreview(expr_fr)
+            self.math_preview.pack(fill=tk.X, pady=(2, 0))
+        else:
+            self.math_preview = None
 
         # Variable buttons row (blue) — only way to insert variables
         var_row = tk.Frame(f, bg=MAIN_BG)
@@ -3303,8 +3477,12 @@ class CostMinimizerFrame(ModuleFrame):
 
         row1 = tk.Frame(f, bg=MAIN_BG)
         row1.pack(fill=tk.X, pady=4)
-        self.lr_var = self.add_entry(row1, "lr", "0.1")
-        self.iters_var = self.add_entry(row1, "Iterations", "1")
+        ttk.Label(row1, text="lr:").pack(side=tk.LEFT)
+        self.lr_var = tk.StringVar(value="0.1")
+        ttk.Entry(row1, textvariable=self.lr_var, width=8).pack(side=tk.LEFT, padx=(2, 12))
+        ttk.Label(row1, text="Iterations:").pack(side=tk.LEFT)
+        self.iters_var = tk.StringVar(value="1")
+        ttk.Entry(row1, textvariable=self.iters_var, width=8).pack(side=tk.LEFT, padx=(2, 0))
 
         # Initial value entries (shown per detected variable)
         self._init_label = ttk.Label(f, text="Initial values:",
@@ -3328,6 +3506,19 @@ class CostMinimizerFrame(ModuleFrame):
         self._on_expr_change()
 
     def _on_expr_change(self):
+        raw = self.expr_editor.get_expression()
+        if self.math_preview is not None:
+            self.math_preview.update_expression(raw)
+
+        # Warn if user typed 'x' directly instead of using variable buttons
+        typed = self.expr_editor.get_raw_text()
+        if re.search(r'x\d?', typed):
+            self._var_hint_label.configure(
+                text="Don't type variables — use the blue buttons below to insert x\u2081\u2013x\u2085.")
+            self._var_hint_label.pack(anchor="w")
+        else:
+            self._var_hint_label.pack_forget()
+
         detected = self.expr_editor.get_variables()
         if detected == self._prev_vars:
             return

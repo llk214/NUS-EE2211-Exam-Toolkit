@@ -1055,7 +1055,27 @@ def run_regression():
         else:
             Wa, ba, Ypa, ma = ols_add_intercept(Phi, Y)
 
-        _print_model(f"Poly", Wa, ba)
+        # Print with labeled polynomial terms
+        from collections import Counter
+        print(f"\n=== Poly ===")
+        print(f"Model: Y = XW + b")
+        print("W (coeffs):")
+        w_rounded = np.round(Wa, 8)
+        labels = []
+        for combo in poly.combos:
+            counts = Counter(combo)
+            parts = []
+            for idx in sorted(counts):
+                power = counts[idx]
+                name = f"x{idx + 1}"
+                if power > 1:
+                    name += f"^{power}"
+                parts.append(name)
+            labels.append("*".join(parts))
+        max_label_len = max(len(l) for l in labels)
+        for i, label in enumerate(labels):
+            print(f"  {label:<{max_label_len}} : {w_rounded[i].tolist()}")
+        print("b (intercept) =", np.round(ba, 8))
         _print_metrics("Polynomial", *ma)
 
     if input("\nPredict for new x values? (y/n): ").strip().lower() == "y":
