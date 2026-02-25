@@ -5,7 +5,7 @@ __pycache__/
 
 # Claude Code local settings
 .claude/
-claude.md
+CLAUDE.md
 
 # Original standalone CLI scripts (functionality now in gui/compute/)
 knowledge_base.py
