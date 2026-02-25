@@ -2,7 +2,20 @@
 
 A comprehensive, exam-ready Python toolkit covering all major topics in NUS EE2211 (Introduction to Machine Learning). Designed for open-book exams where pre-written code is allowed.
 
-##  Features
+## GUI Version
+
+```bash
+pip install numpy scipy
+python EE2211_GUI.py
+```
+
+10 modules accessible from the sidebar: Classification, Clustering, Gradient Descent, Neural Net, Regression, Decision Tree, Cost Minimizer, Logic, Search, and Linear Programming.
+
+---
+
+## CLI Version (Legacy)
+
+###  Features
 
 - **Single-file design**
 - **Interactive menu**
@@ -10,7 +23,7 @@ A comprehensive, exam-ready Python toolkit covering all major topics in NUS EE22
 - **Flexible input**
 - **Exam-tested**
 
-##  Requirements
+###  Requirements
 
 - Python 3.7+
 - NumPy
@@ -19,7 +32,7 @@ A comprehensive, exam-ready Python toolkit covering all major topics in NUS EE22
 pip install numpy
 ```
 
-##  Quick Start
+###  Quick Start
 
 ```bash
 python EE2211_ALL.py
