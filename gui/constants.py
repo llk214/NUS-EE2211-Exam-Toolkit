@@ -1,0 +1,9 @@
+SIDEBAR_BG = "#2b2d42"
+SIDEBAR_FG = "#edf2f4"
+SIDEBAR_ACTIVE = "#ef233c"
+SIDEBAR_HOVER = "#3a3d5c"
+MAIN_BG = "#f8f9fa"
+ACCENT = "#2b2d42"
+FONT_FAMILY = "Segoe UI"
+MONO_FONT = ("Consolas", 11)
+GRID_CELL_FONT = ("Consolas", 10)
