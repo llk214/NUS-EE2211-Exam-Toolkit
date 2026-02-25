@@ -3,6 +3,9 @@ __pycache__/
 *.pyc
 *.pyo
 
+# Claude Code local settings
+.claude/
+
 # Original standalone CLI scripts (functionality now in gui/compute/)
 knowledge_base.py
 search.py
