@@ -92,7 +92,7 @@ class CostMinimizerFrame(ModuleFrame):
 
         # Warn if user typed 'x' directly instead of using variable buttons
         typed = self.expr_editor.get_raw_text()
-        if re.search(r'x\d?', typed):
+        if re.search(r'(?<!e)x\d?|ex(?!p)', typed):
             self._var_hint_label.configure(
                 text="Don't type variables \u2014 use the blue buttons below to insert x\u2081\u2013x\u2085.")
             self._var_hint_label.pack(anchor="w")

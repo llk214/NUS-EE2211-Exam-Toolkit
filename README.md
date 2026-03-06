@@ -1,6 +1,6 @@
-# EE2211 Machine Learning Exam Toolkit
+# EE2211 / EE2213 Exam Toolkit
 
-A comprehensive, exam-ready Python toolkit covering all major topics in NUS EE2211 (Introduction to Machine Learning). Designed for open-book exams where pre-written code is allowed.
+A comprehensive, exam-ready Python toolkit covering all major topics in NUS EE2211 (Introduction to Machine Learning) and EE2213 (Introduction to Artificial Intelligence). Designed for open-book exams where pre-written code is allowed.
 
 ## GUI Version
 

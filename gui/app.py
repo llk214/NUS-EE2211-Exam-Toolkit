@@ -27,7 +27,7 @@ from gui.modules.linear_programming import LinearProgramFrame
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("EE2211 Exam Toolkit")
+        self.title("ML Toolkit")
         self.geometry("1280x950")
         self.minsize(900, 650)
         self.configure(bg=MAIN_BG)
@@ -52,7 +52,7 @@ class App(tk.Tk):
         self.sidebar.pack(side=tk.LEFT, fill=tk.Y)
         self.sidebar.pack_propagate(False)
 
-        tk.Label(self.sidebar, text="EE2211", bg=SIDEBAR_BG, fg=SIDEBAR_FG,
+        tk.Label(self.sidebar, text="ML Toolkit", bg=SIDEBAR_BG, fg=SIDEBAR_FG,
                  font=(FONT_FAMILY, 16, "bold"), pady=12).pack(fill=tk.X)
         tk.Frame(self.sidebar, bg=SIDEBAR_ACTIVE, height=2).pack(fill=tk.X, padx=10, pady=(0, 8))
 

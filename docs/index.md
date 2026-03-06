@@ -1,6 +1,6 @@
-# EE2211 Exam Toolkit — GUI Version
+# EE2211 / EE2213 Exam Toolkit — GUI Version
 
-A Tkinter-based graphical interface for all EE2211 ML modules. All algorithms implemented from scratch using only NumPy.
+A Tkinter-based graphical interface for all EE2211 (Introduction to Machine Learning) and EE2213 (Introduction to Artificial Intelligence) modules. All algorithms implemented from scratch using only NumPy.
 
 ## Quick Start
 
@@ -15,7 +15,7 @@ pip install numpy
 python EE2211_GUI.py
 ```
 
-**Optional dependencies** (for LaTeX rendering and cost function plotting in the Cost Minimizer):
+**Optional dependencies** (for LaTeX rendering and cost function plotting in the Cost Minimizer — already included in the exe):
 ```bash
 pip install matplotlib sympy
 ```
@@ -139,7 +139,7 @@ Numerical gradient descent on arbitrary mathematical expressions.
 | **Variables** | Up to 5 variables (x₁ through x₅), inserted via blue buttons |
 | **Operators** | +, -, *, /, ** (power), standard math functions |
 | **Functions** | sin, cos, tan, exp, log, sqrt, abs, pi, e |
-| **LaTeX preview** | Live rendered math preview (requires matplotlib + sympy) |
+| **LaTeX preview** | Live rendered math preview (included in exe; requires matplotlib + sympy when running from source) |
 | **Math keyboard** | On-screen buttons for operators and functions |
 
 **Input:** Expression built with variable buttons, initial values per variable, learning rate, iterations
@@ -249,14 +249,16 @@ To build the `.exe` yourself:
 ```bash
 pip install pyinstaller
 pyinstaller --noconfirm --onefile --windowed --name "EE2211_Exam_Toolkit" ^
-    --hidden-import numpy ^
-    --exclude-module matplotlib --exclude-module sympy ^
+    --hidden-import numpy --hidden-import matplotlib ^
+    --hidden-import sympy --hidden-import sympy.parsing.sympy_parser ^
+    --add-data "path/to/matplotlib/mpl-data;matplotlib/mpl-data" ^
     --exclude-module scipy --exclude-module pandas ^
-    --exclude-module PIL --exclude-module sklearn ^
+    --exclude-module sklearn ^
     --clean EE2211_GUI.py
 ```
 
-The executable will be in the `dist/` folder. matplotlib and sympy are excluded to keep the file small (~24 MB) — the Cost Minimizer's LaTeX preview will be disabled in the exe.
+The executable will be in the `dist/` folder (~49 MB). Replace `path/to/matplotlib/mpl-data` with your actual matplotlib data path (find it with `python -c "import matplotlib; print(matplotlib.get_data_path())"`).
+
 
 ---
 
