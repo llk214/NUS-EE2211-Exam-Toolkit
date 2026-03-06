@@ -4,12 +4,16 @@ A comprehensive, exam-ready Python toolkit covering all major topics in NUS EE22
 
 ## GUI Version
 
+Download the standalone `.exe` from the [Releases](https://github.com/llk214/NUS-EE2211-Exam-Toolkit/releases) page (no Python required), or run from source:
+
 ```bash
-pip install numpy scipy
+pip install numpy
 python EE2211_GUI.py
 ```
 
 10 modules accessible from the sidebar: Classification, Clustering, Gradient Descent, Neural Net, Regression, Decision Tree, Cost Minimizer, Logic, Search, and Linear Programming.
+
+**[Full GUI documentation](https://llk214.github.io/NUS-EE2211-Exam-Toolkit/)**
 
 ---
 
