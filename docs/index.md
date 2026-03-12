@@ -1,15 +1,16 @@
-# EE2211 / EE2213 Exam Toolkit — GUI Version
+# EE2211 / EE2213 Exam Toolkit
 
-A Tkinter-based graphical interface for all EE2211 (Introduction to Machine Learning) and EE2213 (Introduction to Artificial Intelligence) modules. All algorithms implemented from scratch using only NumPy.
+A graphical interface for all EE2211 (Introduction to Machine Learning) and EE2213 (Introduction to Artificial Intelligence) modules.
+
+<p align="center">
+  <img src="screenshot.png" alt="Screenshot" style="max-width:100%; border-radius:8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+</p>
 
 ## Quick Start
 
-### Option 1: Download the Executable (Windows)
+**Option 1:** Download `EE2211_Exam_Toolkit.exe` from the [Releases](https://github.com/llk214/NUS-EE2211-Exam-Toolkit/releases) page. No installation required.
 
-Download `EE2211_Exam_Toolkit.exe` from the [Releases](https://github.com/llk214/NUS-EE2211-Exam-Toolkit/releases) page. No Python installation required.
-
-### Option 2: Run from Source
-
+**Option 2:** Run from source:
 ```bash
 pip install numpy
 python EE2211_GUI.py
@@ -243,39 +244,3 @@ Solve linear optimization problems.
 | `Ctrl+Enter` | Run the current module |
 | `Tab` | Move to the next input box (including rows/cols spinners) |
 | `Shift+Tab` | Move to the previous input box |
-
----
-
-## Project Structure
-
-```
-EE2211_GUI.py              # Main entry point
-gui/
-  app.py                   # Main window, sidebar, frame switching
-  base_frame.py            # ModuleFrame base class (input/output layout)
-  constants.py             # UI theme (colors, fonts)
-  utils.py                 # Input parsing utilities
-  widgets.py               # Custom widgets (MatrixGrid, TreeVisualizer, etc.)
-  widgets_cost.py          # Cost minimizer widgets (optional matplotlib/sympy)
-  compute/                 # Pure computation functions (no UI dependencies)
-    regression.py
-    classification.py
-    gradient_descent.py
-    clustering.py
-    tree.py
-    neural.py
-    cost_minimizer.py
-    logic.py
-    search.py
-    linear_programming.py
-  modules/                 # UI frames (one per module, calls compute/)
-test_past_paper.py         # Automated tests against past paper answers
-```
-
-## Testing
-
-```bash
-python test_past_paper.py
-```
-
-Verifies compute modules against 7 past paper questions (19 checks).
