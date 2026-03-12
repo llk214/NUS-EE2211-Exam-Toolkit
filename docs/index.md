@@ -241,6 +241,8 @@ Solve linear optimization problems.
 | Shortcut | Action |
 |----------|--------|
 | `Ctrl+Enter` | Run the current module |
+| `Tab` | Move to the next input box (including rows/cols spinners) |
+| `Shift+Tab` | Move to the previous input box |
 
 ---
 
