@@ -244,20 +244,6 @@ Solve linear optimization problems.
 
 ---
 
-## Building the Executable
-
-To build the `.exe` yourself:
-
-```bash
-pip install pyinstaller numpy matplotlib sympy scipy
-pyinstaller EE2211_Exam_Toolkit.spec --noconfirm --clean
-```
-
-The executable will be in the `dist/` folder (~76 MB).
-
-
----
-
 ## Project Structure
 
 ```
