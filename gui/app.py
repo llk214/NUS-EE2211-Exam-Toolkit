@@ -98,6 +98,14 @@ class App(tk.Tk):
 
         self.show_frame("Classification")
         self.bind("<Control-Return>", self._run_active)
+        # Click on empty area to defocus all input boxes
+        self.bind_all("<Button-1>", self._maybe_defocus)
+
+    def _maybe_defocus(self, event):
+        """Move focus to the root window when clicking on non-input widgets."""
+        w = event.widget
+        if not isinstance(w, (tk.Entry, ttk.Entry, ttk.Spinbox, ttk.Combobox, tk.Text)):
+            self.focus_set()
 
     def _active_btn(self):
         for name, btn in self.sidebar_buttons:

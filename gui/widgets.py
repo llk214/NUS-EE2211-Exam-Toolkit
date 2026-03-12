@@ -167,6 +167,7 @@ class MatrixGrid(tk.Frame):
         self.n_rows = rows
         self.n_cols = cols
         self.vector_mode = vector_mode
+        self._resizing = False
         self.row_label = row_label
         self.col_label = col_label
         self.cells = []  # 2D list of Entry widgets
@@ -178,26 +179,45 @@ class MatrixGrid(tk.Frame):
         ttk.Label(header, text=label, font=(FONT_FAMILY, 10, "bold")).pack(side=tk.LEFT)
 
         self.rows_var = tk.StringVar(value=str(rows))
+        self._spinboxes = []
+        spin_vcmd = (self.register(lambda v: v == "" or v.isdigit()), '%P')
+
         if not vector_mode:
             if not hide_rows:
                 ttk.Label(header, text="Rows:").pack(side=tk.LEFT, padx=(8, 0))
                 rows_spin = ttk.Spinbox(header, from_=1, to=50, textvariable=self.rows_var,
-                                        width=3, command=self._on_spin_change)
+                                        width=3, command=self._on_spin_change,
+                                        validate="key", validatecommand=spin_vcmd)
                 rows_spin.pack(side=tk.LEFT, padx=(2, 4))
+                rows_spin.bind("<Return>", lambda e: self.focus_set())
+                rows_spin.bind("<MouseWheel>", lambda e: "break")
+                self._spinboxes.append(rows_spin)
 
             if not hide_cols:
                 ttk.Label(header, text="Cols:").pack(side=tk.LEFT, padx=(8, 0) if hide_rows else (0, 0))
             self.cols_var = tk.StringVar(value=str(cols))
             if not hide_cols:
                 cols_spin = ttk.Spinbox(header, from_=1, to=50, textvariable=self.cols_var,
-                                        width=3, command=self._on_spin_change)
+                                        width=3, command=self._on_spin_change,
+                                        validate="key", validatecommand=spin_vcmd)
                 cols_spin.pack(side=tk.LEFT, padx=(2, 4))
+                cols_spin.bind("<Return>", lambda e: self.focus_set())
+                cols_spin.bind("<MouseWheel>", lambda e: "break")
+                self._spinboxes.append(cols_spin)
         else:
             ttk.Label(header, text="Size:").pack(side=tk.LEFT, padx=(8, 0))
             rows_spin = ttk.Spinbox(header, from_=1, to=50, textvariable=self.rows_var,
-                                    width=3, command=self._on_spin_change)
+                                    width=3, command=self._on_spin_change,
+                                    validate="key", validatecommand=spin_vcmd)
             rows_spin.pack(side=tk.LEFT, padx=(2, 4))
+            rows_spin.bind("<Return>", lambda e: self.focus_set())
+            rows_spin.bind("<MouseWheel>", lambda e: "break")
+            self._spinboxes.append(rows_spin)
             self.cols_var = tk.StringVar(value="1")
+
+        # Trace variables so grid resizes immediately on any change (typing, arrows, etc.)
+        self.rows_var.trace_add("write", lambda *_: self._on_spin_change())
+        self.cols_var.trace_add("write", lambda *_: self._on_spin_change())
 
         RoundedButton(header, text="Paste", width=5, command=self._paste_from_clipboard,
                       font=(FONT_FAMILY, 9), pady=1).pack(side=tk.LEFT, padx=(6, 0))
@@ -266,36 +286,48 @@ class MatrixGrid(tk.Frame):
         self._update_shape_label()
 
     def _on_spin_change(self):
+        if self._resizing:
+            return
         try:
-            new_rows = int(self.rows_var.get())
-            new_cols = int(self.cols_var.get()) if not self.vector_mode else 1
-        except ValueError:
+            row_str = self.rows_var.get().strip()
+            col_str = self.cols_var.get().strip() if not self.vector_mode else "1"
+            if not row_str or not col_str:
+                return
+            new_rows = int(row_str)
+            new_cols = int(col_str)
+        except (ValueError, TypeError):
             return
         new_rows = max(1, min(50, new_rows))
         new_cols = max(1, min(50, new_cols))
+        if new_rows == self.n_rows and new_cols == self.n_cols:
+            return
         self._resize(new_rows, new_cols)
 
     def _resize(self, new_rows, new_cols):
-        # Save existing values
-        old_vals = []
-        for r in range(min(self.n_rows, new_rows)):
-            row_vals = []
-            for c in range(min(self.n_cols, new_cols)):
-                row_vals.append(self.cells[r][c].get())
-            old_vals.append(row_vals)
+        self._resizing = True
+        try:
+            # Save existing values
+            old_vals = []
+            for r in range(min(self.n_rows, new_rows)):
+                row_vals = []
+                for c in range(min(self.n_cols, new_cols)):
+                    row_vals.append(self.cells[r][c].get())
+                old_vals.append(row_vals)
 
-        self.n_rows = new_rows
-        self.n_cols = new_cols
-        self.rows_var.set(str(new_rows))
-        if not self.vector_mode:
-            self.cols_var.set(str(new_cols))
-        self._build_grid()
+            self.n_rows = new_rows
+            self.n_cols = new_cols
+            self.rows_var.set(str(new_rows))
+            if not self.vector_mode:
+                self.cols_var.set(str(new_cols))
+            self._build_grid()
 
-        # Restore saved values
-        for r in range(len(old_vals)):
-            for c in range(len(old_vals[r])):
-                self.cells[r][c].delete(0, tk.END)
-                self.cells[r][c].insert(0, old_vals[r][c])
+            # Restore saved values
+            for r in range(len(old_vals)):
+                for c in range(len(old_vals[r])):
+                    self.cells[r][c].delete(0, tk.END)
+                    self.cells[r][c].insert(0, old_vals[r][c])
+        finally:
+            self._resizing = False
 
         if self.on_resize:
             self.on_resize(new_rows, new_cols)

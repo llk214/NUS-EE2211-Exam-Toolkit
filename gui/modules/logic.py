@@ -38,7 +38,7 @@ class LogicFrame(ModuleFrame):
         # Expression input (used by Truth Table, Check, Equivalence — hidden in Entailment)
         self._expr_frame = tk.Frame(f, bg=MAIN_BG)
         self.expr_txt = self._make_text(self._expr_frame, "Expression",
-            hint="Use buttons below or type: ~ & | -> <->  (propositions: A-H)",
+            hint="Use buttons above or type: ~ & | -> <->  (propositions: A-H)",
             height=2)
 
         # Operator buttons — insert into whichever text widget was last focused
@@ -188,12 +188,19 @@ class LogicFrame(ModuleFrame):
             expr = self.get_text(self.expr_txt)
 
             if mode == "Truth Table":
+                # Multiple lines → join with AND
+                lines = [l.strip() for l in expr.splitlines() if l.strip()]
+                if len(lines) > 1:
+                    expr = ' \u2227 '.join(f'({l})' for l in lines)
                 result = compute_logic('truth_table', expression=expr)
             elif mode == "Entailment":
                 kb = self.get_text(self.kb_txt).splitlines()
                 queries = self.get_text(self.query_txt).splitlines()
                 result = compute_logic('entailment', kb_lines=kb, query_lines=queries)
             elif mode == "Check":
+                lines = [l.strip() for l in expr.splitlines() if l.strip()]
+                if len(lines) > 1:
+                    expr = ' \u2227 '.join(f'({l})' for l in lines)
                 result = compute_logic('check', expression=expr)
             elif mode == "Equivalence":
                 expr2 = self.get_text(self.expr2_txt)

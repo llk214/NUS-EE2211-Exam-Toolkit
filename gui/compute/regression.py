@@ -184,11 +184,9 @@ def compute_regression_predict(X_str, W_str, b_str, model, degree):
     if model == 'polynomial':
         poly = PolynomialFeatures(degree).fit(X)
         X = poly.transform(X)
-        out.write(f"Polynomial features (degree={degree}):\n{np.round(X, 8)}\n\n")
 
     Yp = X @ W + b
     out.write(f"=== Predict ({model}) ===\n")
-    out.write(f"Y_pred = X @ W + b\n")
     out.write(f"Y_pred =\n{np.round(Yp, 8)}\n")
     result['text'] = out.getvalue()
     result['predictions'] = Yp

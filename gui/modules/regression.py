@@ -44,7 +44,6 @@ class RegressionFrame(ModuleFrame):
                                                 on_change=self._on_mode_change)
         self.alpha_var = self.add_entry(self._train_row, "Alpha (Ridge)", "1.0")
         self.degree_var = self.add_entry(self._train_row, "Degree (Poly)", "2", width=6)
-        self.pen_bias_var = self.add_check(self._train_row, "Penalize Bias")
 
         # --- Predict widgets ---
         self.pred_X_grid = self.add_matrix_grid(f, "X (predict)", rows=3, cols=1,
@@ -93,6 +92,8 @@ class RegressionFrame(ModuleFrame):
         self.W_grid.set_from_matrix(np.atleast_2d(W))
         if b is not None:
             self.b_grid.set_from_matrix(np.atleast_2d(np.atleast_1d(b)))
+        # Remove focus from spinboxes so scroll doesn't change dimensions
+        self.focus_set()
 
     def _on_X_rows_var_change(self, *args):
         if self._x_rows_syncing:
@@ -139,9 +140,13 @@ class RegressionFrame(ModuleFrame):
         self._toggle(self.Y_grid, is_train, fill=tk.X, pady=2)
         self._toggle(self._train_row, is_train, fill=tk.X, pady=4)
         if is_train:
+            # Set sensible alpha default when switching models
+            if model == "polynomial" and self.alpha_var.get() == "1.0":
+                self.alpha_var.set("0.0")
+            elif model == "ridge" and self.alpha_var.get() == "0.0":
+                self.alpha_var.set("1.0")
             self._toggle(self.alpha_var._frame, model != "ols", side=tk.LEFT, padx=(0, 10), pady=2)
             self._toggle(self.degree_var._frame, model == "polynomial", side=tk.LEFT, padx=(0, 10), pady=2)
-            self._toggle(self.pen_bias_var._frame, model != "ols", side=tk.LEFT, padx=(0, 10), pady=2)
 
         # Predict widgets
         self._toggle(self.pred_X_grid, not is_train, fill=tk.X, pady=2)
@@ -161,7 +166,7 @@ class RegressionFrame(ModuleFrame):
                     model=self.model_var.get(),
                     alpha=float(self.alpha_var.get()),
                     degree=int(self.degree_var.get()),
-                    penalize_bias=self.pen_bias_var.get(),
+                    penalize_bias=False,
                 )
             else:
                 model = "polynomial" if self.pred_model_var.get() == "polynomial" else "ols"

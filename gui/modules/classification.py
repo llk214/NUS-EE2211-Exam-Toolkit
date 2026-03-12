@@ -47,7 +47,7 @@ class ClassificationFrame(ModuleFrame):
 
         self._row2 = tk.Frame(f, bg=MAIN_BG)
         self._row2.pack(fill=tk.X, pady=4)
-        self.pen_bias_var = self.add_check(self._row2, "Penalize Bias")
+        self.pen_bias_var = self.add_check(self._row2, "Penalize Bias", True)
         self.metrics_var = self.add_check(self._row2, "Show Metrics", True)
 
         # Extra settings (batch, batch size, momentum) - stored as StringVars with defaults
@@ -100,6 +100,8 @@ class ClassificationFrame(ModuleFrame):
         self.pred_X_grid._resize(self.pred_X_grid.n_rows, self.X_grid.n_cols)
         self._set_mode("predict")
         self._pred_w_grid.set_from_matrix(np.atleast_2d(W))
+        # Remove focus from spinboxes so scroll doesn't change dimensions
+        self.focus_set()
 
     def _on_X_rows_var_change(self, *args):
         if self._x_rows_syncing:
