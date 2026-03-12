@@ -13,8 +13,6 @@ class RegressionFrame(ModuleFrame):
         super().__init__(parent, "Regression (OLS / Ridge / Polynomial)")
 
         f = self.input_frame
-        self.X_grid = self.add_matrix_grid(f, "X", rows=5, cols=1,
-                                           row_label="samples", col_label="features")
 
         # Mode toggle buttons (Train / Predict)
         mode_frame = tk.Frame(f, bg=MAIN_BG)
@@ -32,7 +30,9 @@ class RegressionFrame(ModuleFrame):
         self._predict_btn.pack(side=tk.LEFT)
 
         # --- Train widgets ---
-        self.Y_grid = self.add_matrix_grid(f, "Y", rows=5, cols=1,
+        self.X_grid = self.add_matrix_grid(f, "X (train)", rows=5, cols=1,
+                                           row_label="samples", col_label="features")
+        self.Y_grid = self.add_matrix_grid(f, "Y (train)", rows=5, cols=1,
                                            row_label="samples", col_label="outputs",
                                            hide_rows=True)
         self._x_rows_syncing = False
@@ -47,6 +47,9 @@ class RegressionFrame(ModuleFrame):
         self.pen_bias_var = self.add_check(self._train_row, "Penalize Bias")
 
         # --- Predict widgets ---
+        self.pred_X_grid = self.add_matrix_grid(f, "X (predict)", rows=3, cols=1,
+                                                row_label="samples", col_label="features")
+
         self._pred_row = tk.Frame(f, bg=MAIN_BG)
         self._pred_row.pack(fill=tk.X, pady=4)
         self.pred_model_var = self.add_button_group(self._pred_row, "Model", ["ols/ridge", "polynomial"], "ols/ridge",
@@ -73,6 +76,19 @@ class RegressionFrame(ModuleFrame):
             return
         W = self._last_result['weights']
         b = self._last_result.get('bias')
+
+        # Match predict mode/degree to the training model
+        train_model = self.model_var.get()
+        if train_model == "polynomial":
+            self.pred_model_var.set("polynomial")
+            self.pred_degree_var.set(self.degree_var.get())
+        else:
+            self.pred_model_var.set("ols/ridge")
+        self.pred_model_var._update()
+
+        # Auto-fit predict X columns to match training X
+        self.pred_X_grid._resize(self.pred_X_grid.n_rows, self.X_grid.n_cols)
+
         self._set_mode("predict")
         self.W_grid.set_from_matrix(np.atleast_2d(W))
         if b is not None:
@@ -119,6 +135,7 @@ class RegressionFrame(ModuleFrame):
         pred_model = self.pred_model_var.get()
 
         # Train widgets
+        self._toggle(self.X_grid, is_train, fill=tk.X, pady=2)
         self._toggle(self.Y_grid, is_train, fill=tk.X, pady=2)
         self._toggle(self._train_row, is_train, fill=tk.X, pady=4)
         if is_train:
@@ -127,6 +144,7 @@ class RegressionFrame(ModuleFrame):
             self._toggle(self.pen_bias_var._frame, model != "ols", side=tk.LEFT, padx=(0, 10), pady=2)
 
         # Predict widgets
+        self._toggle(self.pred_X_grid, not is_train, fill=tk.X, pady=2)
         self._toggle(self._pred_row, not is_train, fill=tk.X, pady=4)
         self._toggle(self.W_grid, not is_train, fill=tk.X, pady=2)
         self._toggle(self.b_grid, not is_train, fill=tk.X, pady=2)
@@ -148,7 +166,7 @@ class RegressionFrame(ModuleFrame):
             else:
                 model = "polynomial" if self.pred_model_var.get() == "polynomial" else "ols"
                 result = compute_regression_predict(
-                    X_str=self.X_grid.get_matrix_string(),
+                    X_str=self.pred_X_grid.get_matrix_string(),
                     W_str=self.W_grid.get_matrix_string(),
                     b_str=self.b_grid.get_matrix_string(),
                     model=model,

@@ -13,8 +13,6 @@ class ClassificationFrame(ModuleFrame):
         super().__init__(parent, "Classification (Logistic Regression)")
 
         f = self.input_frame
-        self.X_grid = self.add_matrix_grid(f, "X (feature matrix)", rows=3, cols=2,
-                                           row_label="samples", col_label="features")
 
         # Mode toggle buttons (Train / Predict)
         mode_frame = tk.Frame(f, bg=MAIN_BG)
@@ -32,6 +30,8 @@ class ClassificationFrame(ModuleFrame):
         self._predict_btn.pack(side=tk.LEFT)
 
         # --- Train widgets ---
+        self.X_grid = self.add_matrix_grid(f, "X (train)", rows=3, cols=2,
+                                           row_label="samples", col_label="features")
         self.y_grid = self.add_matrix_grid(f, "y (labels)", rows=3, cols=1,
                                            row_label="samples", col_label="classes",
                                            hide_rows=True)
@@ -71,6 +71,9 @@ class ClassificationFrame(ModuleFrame):
                                                    row_label="weights", col_label="classes")
 
         # --- Predict widgets ---
+        self.pred_X_grid = self.add_matrix_grid(f, "X (predict)", rows=3, cols=2,
+                                                row_label="samples", col_label="features")
+
         self._pred_frame = tk.Frame(f, bg=MAIN_BG)
         self._pred_frame.pack(fill=tk.X, pady=4)
         self.pred_binary_var = self.add_check(self._pred_frame, "Binary")
@@ -93,6 +96,8 @@ class ClassificationFrame(ModuleFrame):
         if self._last_result is None or self._last_result.get('weights') is None:
             return
         W = self._last_result['weights']
+        # Auto-fit predict X columns to match training X
+        self.pred_X_grid._resize(self.pred_X_grid.n_rows, self.X_grid.n_cols)
         self._set_mode("predict")
         self._pred_w_grid.set_from_matrix(np.atleast_2d(W))
 
@@ -176,6 +181,7 @@ class ClassificationFrame(ModuleFrame):
         w_init = self.w_init_var.get()
 
         # Train-only widgets
+        self._toggle(self.X_grid, is_train, fill=tk.X, pady=2)
         self._toggle(self.y_grid, is_train, fill=tk.X, pady=2)
         self._toggle(self._row1, is_train, fill=tk.X, pady=4)
         self._toggle(self._row2, is_train, fill=tk.X, pady=4)
@@ -184,6 +190,7 @@ class ClassificationFrame(ModuleFrame):
         self._toggle(self._train_w_grid, is_train and w_init == "manual", fill=tk.X, pady=2)
 
         # Predict-only widgets
+        self._toggle(self.pred_X_grid, not is_train, fill=tk.X, pady=2)
         self._toggle(self._pred_frame, not is_train, fill=tk.X, pady=4)
         self._toggle(self._pred_w_grid, not is_train, fill=tk.X, pady=2)
 
@@ -194,7 +201,7 @@ class ClassificationFrame(ModuleFrame):
             else:
                 w_str = self._pred_w_grid.get_matrix_string()
             result = compute_classification(
-                X_str=self.X_grid.get_matrix_string(),
+                X_str=self.X_grid.get_matrix_string() if self._mode_val == "train" else self.pred_X_grid.get_matrix_string(),
                 y_str=self.y_grid.get_matrix_string(),
                 mode_choice=self._mode_val,
                 lr=float(self.lr_var.get()),
