@@ -15,10 +15,12 @@ pip install numpy
 python EE2211_GUI.py
 ```
 
-**Optional dependencies** (for LaTeX rendering and cost function plotting in the Cost Minimizer — already included in the exe):
+**Optional dependencies** (already included in the exe):
 ```bash
-pip install matplotlib sympy
+pip install matplotlib sympy scipy
 ```
+- `matplotlib` + `sympy`: LaTeX rendering and cost function plotting in Cost Minimizer
+- `scipy`: Linear Programming solver
 
 **Requirements:** Python 3.7+, NumPy, Tkinter (built-in)
 
@@ -37,7 +39,7 @@ Solves linear regression problems with closed-form solutions.
 | Feature | Details |
 |---------|---------|
 | **OLS** | Ordinary least squares with automatic intercept |
-| **Ridge** | L2-regularized regression with configurable alpha, optional bias penalization |
+| **Ridge** | L2-regularized regression with configurable alpha |
 | **Polynomial** | Feature expansion to any degree, then OLS/Ridge |
 | **Metrics** | MSE, RMSE, MAE, R², Adjusted R², Pearson r |
 | **Predict mode** | Supply trained W and b to predict on new X |
@@ -55,7 +57,7 @@ Binary and multiclass logistic regression via gradient descent.
 | **Binary** | Sigmoid activation with configurable threshold |
 | **Multiclass** | Softmax activation with one-hot encoding |
 | **Training** | Full batch (GD), stochastic (SGD), mini-batch |
-| **Regularization** | L2 lambda with optional bias penalization |
+| **Regularization** | L2 lambda with bias penalization (on by default per EE2211/EE2213) |
 | **Metrics** | Confusion matrix, precision, recall, F1-score |
 | **Weight init** | Zeros, manual, or random |
 | **Extra settings** | Batch type, batch size, momentum (via popup dialog) |
@@ -154,7 +156,7 @@ Truth tables, entailment checking, and equivalence testing.
 
 | Mode | Description |
 |------|-------------|
-| **Truth Table** | Generate full truth table for any propositional expression |
+| **Truth Table** | Generate full truth table — multiple lines are auto-joined with AND (∧) |
 | **Entailment** | Check if a knowledge base entails given queries |
 | **Check** | Determine if an expression is a tautology, contradiction, or contingency |
 | **Equivalence** | Test if two expressions are logically equivalent |
@@ -247,17 +249,11 @@ Solve linear optimization problems.
 To build the `.exe` yourself:
 
 ```bash
-pip install pyinstaller
-pyinstaller --noconfirm --onefile --windowed --name "EE2211_Exam_Toolkit" ^
-    --hidden-import numpy --hidden-import matplotlib ^
-    --hidden-import sympy --hidden-import sympy.parsing.sympy_parser ^
-    --add-data "path/to/matplotlib/mpl-data;matplotlib/mpl-data" ^
-    --exclude-module scipy --exclude-module pandas ^
-    --exclude-module sklearn ^
-    --clean EE2211_GUI.py
+pip install pyinstaller numpy matplotlib sympy scipy
+pyinstaller EE2211_Exam_Toolkit.spec --noconfirm --clean
 ```
 
-The executable will be in the `dist/` folder (~49 MB). Replace `path/to/matplotlib/mpl-data` with your actual matplotlib data path (find it with `python -c "import matplotlib; print(matplotlib.get_data_path())"`).
+The executable will be in the `dist/` folder (~76 MB).
 
 
 ---
