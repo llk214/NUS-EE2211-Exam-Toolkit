@@ -11,6 +11,12 @@ pip install numpy
 python EE2211_GUI.py
 ```
 
+> **Note for macOS users:** The `.exe` release is Windows-only. Please run from source instead.
+
+<p align="center">
+  <img src="docs/screenshot.png" alt="Screenshot" width="50%">
+</p>
+
 10 modules accessible from the sidebar: Classification, Clustering, Gradient Descent, Neural Net, Regression, Decision Tree, Cost Minimizer, Logic, Search, and Linear Programming.
 
 **[Full GUI documentation](https://llk214.github.io/NUS-EE2211-Exam-Toolkit/)**
