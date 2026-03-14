@@ -40,12 +40,12 @@ Solves linear regression problems with closed-form solutions.
 | Feature | Details |
 |---------|---------|
 | **OLS** | Ordinary least squares with automatic intercept |
-| **Ridge** | L2-regularized regression with configurable alpha |
+| **Ridge** | L2-regularized regression with configurable alpha and optional bias penalization |
 | **Polynomial** | Feature expansion to any degree, then OLS/Ridge |
 | **Metrics** | MSE, RMSE, MAE, R², Adjusted R², Pearson r |
 | **Predict mode** | Supply trained W and b to predict on new X |
 
-**Input:** X matrix, Y matrix, model type, alpha (Ridge), degree (Polynomial)
+**Input:** X matrix, Y matrix, model type, alpha (Ridge), penalise bias toggle (Ridge/Polynomial), degree (Polynomial)
 
 ---
 
