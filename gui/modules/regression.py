@@ -43,6 +43,7 @@ class RegressionFrame(ModuleFrame):
         self.model_var = self.add_button_group(self._train_row, "Model", ["ols", "ridge", "polynomial"], "ols",
                                                 on_change=self._on_mode_change)
         self.alpha_var = self.add_entry(self._train_row, "Alpha (Ridge)", "1.0")
+        self.penalize_bias_var = self.add_check(self._train_row, "Penalise bias", default=True)
         self.degree_var = self.add_entry(self._train_row, "Degree (Poly)", "2", width=6)
 
         # --- Predict widgets ---
@@ -146,6 +147,7 @@ class RegressionFrame(ModuleFrame):
             elif model == "ridge" and self.alpha_var.get() == "0.0":
                 self.alpha_var.set("1.0")
             self._toggle(self.alpha_var._frame, model != "ols", side=tk.LEFT, padx=(0, 10), pady=2)
+            self._toggle(self.penalize_bias_var._frame, model != "ols", side=tk.LEFT, padx=(0, 10), pady=2)
             self._toggle(self.degree_var._frame, model == "polynomial", side=tk.LEFT, padx=(0, 10), pady=2)
 
         # Predict widgets
@@ -166,7 +168,7 @@ class RegressionFrame(ModuleFrame):
                     model=self.model_var.get(),
                     alpha=float(self.alpha_var.get()),
                     degree=int(self.degree_var.get()),
-                    penalize_bias=False,
+                    penalize_bias=self.penalize_bias_var.get(),
                 )
             else:
                 model = "polynomial" if self.pred_model_var.get() == "polynomial" else "ols"
